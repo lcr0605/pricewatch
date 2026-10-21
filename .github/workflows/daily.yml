@@ -1,0 +1,62 @@
+name: daily
+# 매일 09:00(KST) 다나와 가격 수집 → 분석 → 텔레그램 알림·일일 보고서
+
+on:
+  schedule:
+    - cron: "0 0 * * *"        # UTC 00:00 = KST 09:00
+  workflow_dispatch:            # Actions 탭에서 수동 실행
+    inputs:
+      mode:
+        description: "full = 수집부터 전부, report = 수집 없이 오늘 보고서만"
+        type: choice
+        options: [full, report]
+        default: full
+
+# 최소 권한: 저장소 읽기만 (쓰기·PR·이슈 권한 없음)
+permissions:
+  contents: read
+
+# 같은 날 두 번 겹쳐 실행되지 않게
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # 비밀값은 GitHub Secrets에서만 주입 (로그에서는 *** 로 가려짐)
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      # 외부 Action은 커밋 해시로 고정 (태그가 바뀌어도 같은 코드 실행)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: 하루치 실행
+        env:
+          # 입력값을 셸에 직접 끼워 넣지 않고 환경변수로 전달 (스크립트 주입 방지)
+          MODE: ${{ inputs.mode }}
+        run: |
+          if [ "$MODE" = "report" ]; then
+            python -m app.run_daily --report
+          else
+            python -m app.run_daily
+          fi
+
+      # 코드 오류 등으로 실행 자체가 실패하면 텔레그램으로 알림
+      - name: 실패 알림
+        if: failure()
+        run: |
+          curl -sS -o /dev/null -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=🚨 PriceWatch 매일 실행 실패. GitHub Actions 로그를 확인하세요: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
