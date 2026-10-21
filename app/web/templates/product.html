@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} · PriceWatch{% endblock %}
+{% block content %}
+{% set rate = change_rate(latest.lowest_price, prev.lowest_price) if latest and prev and latest.listed_name == prev.listed_name else None %}
+<a href="/products" class="text-toss-sub text-[15px]">‹ 추적 상품</a>
+
+<p class="mt-4 text-[14px] text-toss-muted">{{ product.category or '기타' }}{% if not product.is_active %} · 추적 해제됨{% endif %}</p>
+<h1 class="mt-1 text-[22px] font-bold leading-snug">{{ product.name }}</h1>
+
+{% if latest %}
+<div class="mt-4">
+  <p class="text-[34px] font-bold num leading-none">{{ latest.lowest_price|won }}</p>
+  <p class="mt-2 text-[15px] font-semibold num {{ 'up' if rate and rate > 0 else ('down' if rate and rate < 0 else 'text-toss-muted') }}">
+    {% if rate %}어제보다 {{ '{:,}'.format((latest.lowest_price - prev.lowest_price)|abs) }}원 {{ '올랐어요' if rate > 0 else '내렸어요' }} ({{ '%+.1f'|format(rate * 100) }}%)
+    {% elif prev %}어제와 같아요{% else %}첫 기록이에요{% endif %}
+  </p>
+  <p class="mt-1 text-[13px] text-toss-muted">{{ latest.collected_on.strftime('%-m월 %-d일') }} 기준 · {{ latest.listed_name or product.name }}</p>
+</div>
+
+<section class="card mt-5 p-5">
+  <div class="flex items-center justify-between">
+    <h2 class="text-[17px] font-bold">가격 추이</h2>
+    <span class="text-[13px] text-toss-muted">최근 90일</span>
+  </div>
+  <div class="mt-3 h-56"><canvas id="chart"></canvas></div>
+  <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+    <div class="rounded-xl bg-toss-bg py-3"><p class="text-[12px] text-toss-muted">최저</p><p class="font-bold num down">{{ low|won }}</p></div>
+    <div class="rounded-xl bg-toss-bg py-3"><p class="text-[12px] text-toss-muted">최고</p><p class="font-bold num up">{{ high|won }}</p></div>
+    <div class="rounded-xl bg-toss-bg py-3"><p class="text-[12px] text-toss-muted">판매처</p><p class="font-bold num">{{ latest.offer_count or '-' }}곳</p></div>
+  </div>
+</section>
+{% else %}
+<p class="mt-4 text-toss-sub">아직 수집된 가격이 없어요</p>
+{% endif %}
+
+<section class="card mt-4 p-5">
+  <h2 class="text-[17px] font-bold">목표가</h2>
+  <form method="post" action="/products/{{ product.pcode }}/target" class="mt-3 flex gap-2">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="flex-1 flex items-center h-12 px-4 rounded-xl bg-toss-bg focus-within:ring-2 focus-within:ring-toss-blue">
+      <input name="target_price" inputmode="numeric" placeholder="목표가 없음"
+             value="{{ '{:,}'.format(product.target_price) if product.target_price else '' }}"
+             class="flex-1 bg-transparent outline-none text-[17px] font-semibold num">
+      <span class="text-toss-sub">원</span>
+    </div>
+    <button class="h-12 px-5 rounded-xl bg-toss-blue hover:bg-toss-blueDark text-white font-semibold">저장</button>
+  </form>
+  <p class="mt-2 text-[12px] text-toss-muted">처음으로 목표가 이하가 된 날 텔레그램으로 알려드려요</p>
+</section>
+
+<div class="mt-4 flex gap-2">
+  <a href="https://prod.danawa.com/info/?pcode={{ product.pcode }}" target="_blank" rel="noopener"
+     class="flex-1 h-12 rounded-2xl bg-white text-toss-sub font-semibold grid place-items-center">다나와에서 보기</a>
+  {% if product.is_active %}
+  <form method="post" action="/products/{{ product.pcode }}/stop" class="flex-1"
+        onsubmit="return confirm('추적을 해제할까요? 지난 가격 기록은 남아요.')">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="w-full h-12 rounded-2xl bg-white text-toss-red font-semibold">추적 해제</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if latest %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const data = {{ chart|tojson }};
+  new Chart(document.getElementById('chart'), {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        data: data.prices, borderColor: '#3182f6', backgroundColor: 'rgba(49,130,246,.08)',
+        fill: true, tension: .3, borderWidth: 2.5,
+        pointRadius: data.prices.length > 20 ? 0 : 3, pointBackgroundColor: '#3182f6',
+      }],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (c) => c.parsed.y.toLocaleString('ko-KR') + '원' } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#8b95a1', maxTicksLimit: 6 } },
+        y: { grid: { color: '#f2f4f6' }, border: { display: false },
+             ticks: { color: '#8b95a1', callback: (v) => v.toLocaleString('ko-KR') } },
+      },
+    },
+  });
+</script>
+{% endif %}
+{% endblock %}

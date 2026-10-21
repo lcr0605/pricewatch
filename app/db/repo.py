@@ -143,3 +143,66 @@ def set_active(conn, pcode: str, active: bool) -> bool:
 
 def set_target_price(conn, pcode: str, target_price: int | None) -> None:
     conn.execute("update products set target_price = %s where pcode = %s", (target_price, pcode))
+
+
+# ---- 대시보드 조회 ----
+
+def product_overview(conn) -> list[dict]:
+    """추적 중인 상품별 최신 가격과 직전 가격."""
+    return conn.execute(
+        """
+        with latest as (
+            select distinct on (product_id) product_id, collected_on, lowest_price, offer_count, listed_name
+            from price_snapshots
+            order by product_id, collected_on desc
+        ),
+        prev as (
+            select distinct on (s.product_id) s.product_id, s.lowest_price, s.listed_name
+            from price_snapshots s
+            join latest l on l.product_id = s.product_id and s.collected_on < l.collected_on
+            order by s.product_id, s.collected_on desc
+        )
+        select p.id, p.pcode, p.name, p.category, p.target_price, p.our_price, p.cost,
+               l.collected_on, l.lowest_price as price, l.offer_count,
+               pv.lowest_price as prev_price,
+               coalesce(pv.listed_name <> l.listed_name, false) as option_changed
+        from products p
+        left join latest l on l.product_id = p.id
+        left join prev pv  on pv.product_id = p.id
+        where p.is_active
+        order by p.category nulls last, p.name
+        """
+    ).fetchall()
+
+
+def price_history(conn, pcode: str, days: int = 90) -> list[dict]:
+    return conn.execute(
+        """select s.collected_on, s.lowest_price, s.offer_count, s.listed_name
+           from price_snapshots s join products p on p.id = s.product_id
+           where p.pcode = %s and s.collected_on >= current_date - %s
+           order by s.collected_on""",
+        (pcode, days),
+    ).fetchall()
+
+
+def latest_collected_on(conn) -> date | None:
+    return conn.execute("select max(collected_on) as d from price_snapshots").fetchone()["d"]
+
+
+def recent_runs(conn, limit: int = 30) -> list[dict]:
+    return conn.execute(
+        """select id, started_at, finished_at, total, succeeded, failed, status, errors
+           from runs order by started_at desc limit %s""",
+        (limit,),
+    ).fetchall()
+
+
+def run_stats(conn) -> dict:
+    """운영 통계: 실행 일수, 누적 수집 건수, 평균 성공률."""
+    return conn.execute(
+        """select count(*) as runs,
+                  min(started_at) as since,
+                  coalesce(sum(succeeded), 0) as collected,
+                  coalesce(sum(total), 0) as attempted
+           from runs where status <> 'running'"""
+    ).fetchone()

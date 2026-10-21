@@ -8,12 +8,13 @@
 - 텔레그램 대화방 ID 찾기: `python -m app.report.notify`
 - 상품 관리: `python -m app.products search 키워드` / `add <다나와 링크|pcode> [목표가] [--category 분류]` / `remove` / `list`
 - 상품 등록·해제 로직은 `app/tracking.py` 하나 (CLI·대시보드 공용)
+- 대시보드: `uvicorn app.web.main:app --reload` (로그인 비밀번호 `APP_PASSWORD`)
 
 ## 구조
 app/collector 수집 · app/analysis 판정 · app/report 보고서·알림 · app/web 화면 · app/db 스키마·SQL · tests/fixtures HTML 샘플
 
 ## 배포
-Railway 한 프로젝트에 서비스 2개: 웹(대시보드) + cron(`railway.cron.json`, 매일 09:00 KST = UTC 00:00).
+Railway 한 프로젝트에 서비스 2개: 웹(`railway.json`, 대시보드) + cron(`railway.cron.json`, 매일 09:00 KST = UTC 00:00).
 CI는 GitHub Actions(`ci.yml`)에서 테스트만.
 
 ## 절대 규칙
@@ -22,4 +23,5 @@ CI는 GitHub Actions(`ci.yml`)에서 테스트만.
 - 다나와 수집은 app/collector/CLAUDE.md를 따름
 - 수집한 다나와 데이터를 저장소에 올리지 않음 (fixture는 최소 발췌만)
 - 파서 수정 시 tests/fixtures로 테스트 추가
+- 테스트는 외부 네트워크 요청 금지 (`tests/conftest.py`가 차단). 외부 호출은 함수 인자로 바꿔 끼울 수 있게 작성
 - 작업은 브랜치 → PR. PR 본문: 요구사항 / AI 결과에서 고친 점 / 테스트 결과

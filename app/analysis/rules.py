@@ -36,6 +36,7 @@ class Event:
     prev_price: int | None = None
     change_rate: float | None = None
     detail: str = ""
+    pcode: str | None = None
 
     @property
     def score(self) -> int:
@@ -54,6 +55,7 @@ def _event(row: dict, kind: str, **extra) -> Event:
         category=row.get("category"),
         price=row["price"],
         prev_price=row.get("prev_price"),
+        pcode=row.get("pcode"),
         **extra,
     )
 

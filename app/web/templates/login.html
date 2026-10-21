@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}로그인 · PriceWatch{% endblock %}
+{% block content %}
+<div class="min-h-[70vh] flex flex-col justify-center max-w-sm mx-auto">
+  <div class="w-12 h-12 rounded-2xl bg-toss-blue text-white grid place-items-center text-xl font-bold mb-6">₩</div>
+  <h1 class="text-[26px] font-bold leading-snug">경쟁 상품 가격,<br>매일 아침 대신 확인해요</h1>
+  <p class="mt-2 text-toss-sub">PriceWatch 대시보드에 로그인하세요</p>
+
+  <form method="post" action="/login" class="mt-8 space-y-3">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="password" name="password" placeholder="비밀번호" autofocus required
+           class="w-full h-14 px-4 rounded-2xl bg-white border border-toss-line text-[17px] outline-none focus:border-toss-blue focus:ring-4 focus:ring-toss-blueLight">
+    {% if error %}<p class="text-sm text-toss-red px-1">{{ error }}</p>{% endif %}
+    <button class="w-full h-14 rounded-2xl bg-toss-blue hover:bg-toss-blueDark text-white text-[17px] font-semibold">로그인</button>
+  </form>
+</div>
+{% endblock %}

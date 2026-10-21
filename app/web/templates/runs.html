@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}운영 기록 · PriceWatch{% endblock %}
+{% block content %}
+<h1 class="text-[26px] font-bold">운영 기록</h1>
+<p class="mt-1 text-toss-sub">매일 09:00 자동 수집 결과예요</p>
+
+<section class="mt-5 grid grid-cols-3 gap-3">
+  <div class="card p-4">
+    <p class="text-[13px] text-toss-muted">운영 기간</p>
+    <p class="mt-1 text-[22px] font-bold num">{{ days }}<span class="text-base font-semibold text-toss-sub">일</span></p>
+  </div>
+  <div class="card p-4">
+    <p class="text-[13px] text-toss-muted">누적 수집</p>
+    <p class="mt-1 text-[22px] font-bold num">{{ '{:,}'.format(stats.collected) }}<span class="text-base font-semibold text-toss-sub">건</span></p>
+  </div>
+  <div class="card p-4">
+    <p class="text-[13px] text-toss-muted">수집 성공률</p>
+    <p class="mt-1 text-[22px] font-bold num">{{ '%.1f'|format(rate * 100) if rate is not none else '-' }}<span class="text-base font-semibold text-toss-sub">%</span></p>
+  </div>
+</section>
+
+<section class="card mt-4 px-5 pt-4 pb-2">
+  <h2 class="text-[17px] font-bold">실행 내역</h2>
+  <ul class="divide-y divide-toss-line">
+    {% for r in runs %}
+    {% set badge = {'success': ('성공', 'bg-toss-blueLight text-toss-blueDark'),
+                    'partial': ('일부 실패', 'bg-amber-50 text-amber-700'),
+                    'failed': ('점검 필요', 'bg-toss-redLight text-toss-red'),
+                    'running': ('실행 중', 'bg-toss-bg text-toss-sub')}[r.status] %}
+    <li class="py-3">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="font-semibold num">{{ r.started_at|kst }}</p>
+          <p class="text-[13px] text-toss-muted num">{{ r.succeeded }}/{{ r.total }} 수집{% if r.failed %} · 실패 {{ r.failed }}건{% endif %}</p>
+        </div>
+        <span class="text-[12px] font-semibold px-2.5 py-1 rounded-full {{ badge[1] }}">{{ badge[0] }}</span>
+      </div>
+      {% if r.errors %}
+      <details class="mt-2">
+        <summary class="text-[13px] text-toss-sub cursor-pointer">실패 원인 보기</summary>
+        <ul class="mt-1 text-[13px] text-toss-sub space-y-0.5">
+          {% for e in r.errors %}<li class="num">• {{ e.pcode }}: {{ e.reason }}</li>{% endfor %}
+        </ul>
+      </details>
+      {% endif %}
+    </li>
+    {% else %}
+    <li class="py-4 text-toss-sub">아직 실행 기록이 없어요</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}
