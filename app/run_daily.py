@@ -1,9 +1,9 @@
-"""하루치 실행: 수집 → 분석 → 일일 보고서·알림. Railway Cron이 매일 09:00(KST)에 실행한다.
+"""하루치 실행: 수집 → 분석 → 일일 보고서·알림. GitHub Actions(daily.yml)가 매일 09:00(KST)에 실행한다.
 
     python -m app.run_daily              # 수집부터 전부
     python -m app.run_daily --report     # 수집 없이 오늘 보고서만 다시 만들기
 
-종료 코드: 0 = 정상, 1 = 실패율이 높아 점검 필요 (Railway에서 실패로 표시됨)
+종료 코드: 0 = 정상, 1 = 실패율이 높아 점검 필요 (Actions에서 실패로 표시 + 텔레그램 알림)
 """
 
 import random
