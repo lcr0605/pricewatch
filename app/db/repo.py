@@ -74,3 +74,47 @@ def add_product(
              category = coalesce(excluded.category, products.category)""",
         (pcode, name, target_price, category),
     )
+
+
+def daily_comparison(conn, on: date) -> list[dict]:
+    """감시 상품별 오늘 값과 직전 수집값, 최근 30일 최저가를 한 번에 가져온다."""
+    return conn.execute(
+        """
+        with today as (
+            select * from price_snapshots where collected_on = %(on)s
+        ),
+        prev as (
+            select distinct on (product_id) product_id, lowest_price, listed_name, offer_count
+            from price_snapshots
+            where collected_on < %(on)s
+            order by product_id, collected_on desc
+        ),
+        history as (
+            select product_id,
+                   min(lowest_price) as min_30d,
+                   count(*)          as days_30d
+            from price_snapshots
+            where collected_on < %(on)s and collected_on >= %(on)s - 30
+            group by product_id
+        )
+        select p.id, p.pcode, p.name, p.category, p.target_price, p.our_price, p.cost,
+               t.lowest_price  as price,       t.listed_name as listed_name, t.offer_count,
+               pv.lowest_price as prev_price,  pv.listed_name as prev_listed_name,
+               pv.offer_count  as prev_offer_count,
+               h.min_30d, coalesce(h.days_30d, 0) as days_30d
+        from products p
+        join today t      on t.product_id = p.id
+        left join prev pv on pv.product_id = p.id
+        left join history h on h.product_id = p.id
+        where p.is_active
+        order by p.category, p.name
+        """,
+        {"on": on},
+    ).fetchall()
+
+
+def save_alert(conn, run_id: int, kind: str, message: str, product_id: int | None = None) -> None:
+    conn.execute(
+        "insert into alerts (product_id, run_id, kind, message) values (%s, %s, %s, %s)",
+        (product_id, run_id, kind, message),
+    )
