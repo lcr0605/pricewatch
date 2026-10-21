@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}PriceWatch{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Pretendard', 'system-ui', 'sans-serif'] },
+          colors: {
+            toss: {
+              blue: '#3182f6', blueDark: '#1b64da', blueLight: '#e8f3ff',
+              red: '#f04452', redLight: '#fff0f1',
+              bg: '#f2f4f6', text: '#191f28', sub: '#4e5968', muted: '#8b95a1', line: '#e5e8eb',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
+    .card { background: #fff; border-radius: 1.5rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .num { font-variant-numeric: tabular-nums; }
+    .up { color: #f04452; }      /* 인상: 빨강 (국내 관례) */
+    .down { color: #3182f6; }    /* 인하: 파랑 */
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-toss-bg text-toss-text font-sans min-h-screen">
+  {% if nav != 'login' %}
+  <header class="sticky top-0 z-20 bg-white/85 backdrop-blur border-b border-toss-line/70">
+    <div class="max-w-3xl mx-auto px-5 h-14 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2 font-bold text-[17px]">
+        <span class="w-7 h-7 rounded-lg bg-toss-blue text-white grid place-items-center text-sm">₩</span>
+        PriceWatch
+      </a>
+      <nav class="hidden sm:flex items-center gap-1 text-[15px] font-semibold">
+        {% for key, label, href in [('home','홈','/'),('products','추적 상품','/products'),('runs','운영 기록','/runs')] %}
+        <a href="{{ href }}" class="px-3 py-1.5 rounded-full {{ 'bg-toss-bg text-toss-text' if nav == key or (key=='products' and nav=='product') else 'text-toss-muted hover:text-toss-text' }}">{{ label }}</a>
+        {% endfor %}
+        <form method="post" action="/logout" class="ml-2">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button class="text-sm text-toss-muted hover:text-toss-text">로그아웃</button>
+        </form>
+      </nav>
+    </div>
+  </header>
+  {% endif %}
+
+  <main class="max-w-3xl mx-auto px-5 pt-6 pb-28 sm:pb-12">
+    {% if flash %}
+    <div class="mb-5 rounded-2xl px-4 py-3 text-[15px] font-medium
+      {{ 'bg-toss-redLight text-toss-red' if flash.kind == 'error' else 'bg-toss-blueLight text-toss-blueDark' }}">
+      {{ flash.message }}
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if nav != 'login' %}
+  <!-- 모바일 하단 탭 -->
+  <nav class="sm:hidden fixed bottom-0 inset-x-0 bg-white border-t border-toss-line grid grid-cols-3 text-xs font-semibold z-20">
+    {% for key, label, href, icon in [('home','홈','/','🏠'),('products','추적 상품','/products','📦'),('runs','운영 기록','/runs','🗂')] %}
+    <a href="{{ href }}" class="py-2.5 flex flex-col items-center gap-0.5 {{ 'text-toss-text' if nav == key or (key=='products' and nav=='product') else 'text-toss-muted' }}">
+      <span class="text-lg leading-none">{{ icon }}</span>{{ label }}
+    </a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

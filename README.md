@@ -2,7 +2,7 @@
 
 경쟁 상품 가격을 매일 자동으로 수집·비교해서, 변동과 목표가 도달을 알려주는 가격 모니터링 자동화 시스템입니다.
 
-> 🚧 개발 중 (1주차: 수집기·DB·매일 실행)
+> 🚧 개발 중 · 수집기·일일 보고서·텔레그램 알림·토스 스타일 대시보드 완료, 배포 준비 중
 
 ## 자동화하는 업무
 | | 내용 |
@@ -14,7 +14,9 @@
 - **수집**: 다나와 상품 페이지의 구조화 데이터(JSON-LD) 우선, 없으면 화면 가격. 값 검증 후 저장
 - **저장**: Supabase PostgreSQL (모든 테이블 RLS 적용)
 - **실행**: Railway Cron (매일 09:00 KST), 실패율 30% 초과 시 점검 필요로 기록
-- **테스트**: pytest, GitHub Actions에서 PR마다 실행
+- **대시보드**: FastAPI + Tailwind, 토스 스타일. 다나와 링크 붙여넣기로 상품 추가, 가격 추이 차트, 운영 기록 (로그인·CSRF·로그인 잠금)
+- **알림**: 텔레그램 즉시 알림(목표가 도달·±10% 급변) + 규칙 기반 일일 보고서
+- **테스트**: pytest (외부 요청 차단), GitHub Actions에서 PR마다 실행
 - **운영 비용**: 0원 (유료 API 미사용)
 
 ## 실행
@@ -26,6 +28,7 @@ pytest -q
 python -m app.products search 샴푸
 python -m app.products add "https://prod.danawa.com/info/?pcode=97405013" 280000   # 링크로 추적 시작
 python -m app.run_daily
+uvicorn app.web.main:app --reload   # 대시보드 http://localhost:8000
 ```
 
 ## 수집 정책

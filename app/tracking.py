@@ -68,9 +68,11 @@ def _pcode(link: str) -> str:
         raise TrackingError(str(error)) from error
 
 
-def preview(link: str, fetch: Fetcher = _default_fetch) -> Preview:
+def preview(link: str, fetch: Fetcher | None = None) -> Preview:
     """다나와에서 상품 정보를 확인만 한다. DB에는 쓰지 않는다."""
     pcode = _pcode(link)
+    # 기본값을 실행 시점에 찾는다 (정의 시점에 고정하면 테스트에서 바꿔 끼울 수 없음)
+    fetch = fetch or _default_fetch
     try:
         snapshot = parse_product(fetch(pcode))
     except FetchError as error:
@@ -103,7 +105,7 @@ def start_tracking(
     category: str | None = None,
     *,
     previewed: Preview | None = None,
-    fetch: Fetcher = _default_fetch,
+    fetch: Fetcher | None = None,
     today: date | None = None,
 ) -> TrackingResult:
     """등록하고 오늘 가격을 바로 저장한다.
