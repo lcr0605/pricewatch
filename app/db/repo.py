@@ -39,7 +39,9 @@ def start_run(conn) -> int:
     return conn.execute("insert into runs default values returning id").fetchone()["id"]
 
 
-def save_snapshot(conn, product_id: int, run_id: int, on: date, snap: ProductSnapshot) -> None:
+def save_snapshot(
+    conn, product_id: int, run_id: int | None, on: date, snap: ProductSnapshot
+) -> None:
     """같은 날 다시 실행하면 그날 값을 덮어쓴다."""
     conn.execute(
         """insert into price_snapshots
@@ -118,3 +120,26 @@ def save_alert(conn, run_id: int, kind: str, message: str, product_id: int | Non
         "insert into alerts (product_id, run_id, kind, message) values (%s, %s, %s, %s)",
         (product_id, run_id, kind, message),
     )
+
+
+def count_active(conn) -> int:
+    return conn.execute("select count(*) as n from products where is_active").fetchone()["n"]
+
+
+def find_product_by_pcode(conn, pcode: str) -> dict | None:
+    return conn.execute(
+        "select id, pcode, name, category, target_price, is_active from products where pcode = %s",
+        (pcode,),
+    ).fetchone()
+
+
+def set_active(conn, pcode: str, active: bool) -> bool:
+    """추적 시작/해제. 가격 기록은 지우지 않는다. 해당 상품이 있으면 True."""
+    row = conn.execute(
+        "update products set is_active = %s where pcode = %s returning id", (active, pcode)
+    ).fetchone()
+    return row is not None
+
+
+def set_target_price(conn, pcode: str, target_price: int | None) -> None:
+    conn.execute("update products set target_price = %s where pcode = %s", (target_price, pcode))
