@@ -1,9 +1,10 @@
 name: daily
-# 매일 09:00(KST) 다나와 가격 수집 → 분석 → 텔레그램 알림·일일 보고서
+# 매일 08:47(KST) 다나와 가격 수집 → 분석 → 텔레그램 알림·일일 보고서
 
 on:
   schedule:
-    - cron: "0 0 * * *"        # UTC 00:00 = KST 09:00
+    # 정각은 전 세계 예약이 몰려 지연·누락이 잦아 피함. UTC 23:47 = KST 08:47 (날짜는 실행 시점 KST 기준)
+    - cron: "47 23 * * *"
   workflow_dispatch:            # Actions 탭에서 수동 실행
     inputs:
       mode:

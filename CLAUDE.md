@@ -14,7 +14,7 @@
 app/collector 수집 · app/analysis 판정 · app/report 보고서·알림 · app/web 화면 · app/db 스키마·SQL · tests/fixtures HTML 샘플
 
 ## 배포
-- 매일 수집: GitHub Actions `daily.yml` (UTC 00:00 = KST 09:00, 수동 실행 시 mode=report로 보고서만)
+- 매일 수집: GitHub Actions `daily.yml` (UTC 23:47 = KST 08:47, 정각 혼잡 회피, 수동 실행 시 mode=report로 보고서만)
 - 대시보드: Railway 웹 서비스(`railway.json`)
 - CI: GitHub Actions `ci.yml` (PR마다 테스트, 비밀값 없음)
 - 비밀값은 GitHub Secrets·Railway 변수로만. 워크플로는 `permissions: contents: read`, 외부 Action은 커밋 해시 고정, 입력값은 env로 전달
