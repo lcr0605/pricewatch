@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+# 수집한 다나와 데이터는 저장소에 올리지 않음 (docs/collection-policy.md)
+data/
+*.sqlite
+.DS_Store
+
+# 개인 Claude Code 설정
+.claude/settings.local.json
