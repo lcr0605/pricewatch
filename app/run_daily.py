@@ -35,7 +35,12 @@ def run() -> int:
         pcode = product["pcode"]
         try:
             snap = parse_product(fetch_product_html(session, pcode))
-            problems = check_snapshot(snap, repo.previous_price(conn, product["id"], today))
+            prev = repo.previous_snapshot(conn, product["id"], today)
+            problems = check_snapshot(
+                snap,
+                prev["lowest_price"] if prev else None,
+                prev["listed_name"] if prev else None,
+            )
             if problems:
                 errors.append({"pcode": pcode, "reason": "; ".join(problems)})
                 continue

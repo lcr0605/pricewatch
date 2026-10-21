@@ -6,6 +6,7 @@ create table if not exists products (
     id             bigserial primary key,
     pcode          text not null unique,          -- 다나와 상품코드
     name           text not null,
+    category       text,                          -- 예: 샴푸, 치약
     target_price   integer,                       -- 이 가격 이하로 내려가면 알림
     our_price      integer,                       -- 선택: 우리 판매가
     cost           integer,                       -- 선택: 원가 (마진 계산용)
@@ -32,6 +33,7 @@ create table if not exists price_snapshots (
     run_id         bigint references runs(id) on delete set null,
     collected_on   date not null,
     lowest_price   integer not null check (lowest_price > 0),
+    listed_name    text,                          -- 가격 기준 묶음 옵션 이름 (예: ... (30개))
     offer_count    integer,                       -- 판매처 수
     rating         numeric(2, 1),
     review_count   integer,

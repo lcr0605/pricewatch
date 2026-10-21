@@ -9,12 +9,18 @@ MAX_DAILY_CHANGE_RATE = 0.7
 FAILURE_ALERT_RATE = 0.3
 
 
-def check_snapshot(snapshot: ProductSnapshot, previous_price: int | None) -> list[str]:
-    """문제 목록을 돌려준다. 빈 목록이면 정상."""
+def check_snapshot(
+    snapshot: ProductSnapshot, previous_price: int | None, previous_name: str | None = None
+) -> list[str]:
+    """문제 목록을 돌려준다. 빈 목록이면 정상.
+
+    대표 묶음 옵션이 바뀐 날(이름이 다름)은 단위가 달라 가격 비교를 하지 않는다.
+    """
     problems = []
     if snapshot.lowest_price < MIN_PRICE:
         problems.append(f"가격이 너무 낮음: {snapshot.lowest_price}원")
-    if previous_price:
+    option_changed = previous_name is not None and previous_name != snapshot.name
+    if previous_price and not option_changed:
         change = abs(snapshot.lowest_price - previous_price) / previous_price
         if change > MAX_DAILY_CHANGE_RATE:
             problems.append(
