@@ -4,7 +4,8 @@
 ## 명령 (가상환경: `source .venv/bin/activate`, Python 3.11)
 - 설치: `pip install -r requirements.txt`
 - 테스트: `pytest -q` (커밋 전 필수 통과)
-- 하루치 수집: `python -m app.run_daily`
+- 하루치 실행(수집→분석→보고서·알림): `python -m app.run_daily` / 보고서만: `--report`
+- 텔레그램 대화방 ID 찾기: `python -m app.report.notify`
 - 상품 관리: `python -m app.products search 키워드` / `add <다나와 링크|pcode> [목표가] [--category 분류]` / `remove` / `list`
 - 상품 등록·해제 로직은 `app/tracking.py` 하나 (CLI·대시보드 공용)
 
