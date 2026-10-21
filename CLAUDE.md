@@ -5,7 +5,8 @@
 - 설치: `pip install -r requirements.txt`
 - 테스트: `pytest -q` (커밋 전 필수 통과)
 - 하루치 수집: `python -m app.run_daily`
-- 상품 찾기·등록: `python -m app.products search 키워드` / `add pcode [목표가]` / `list`
+- 상품 관리: `python -m app.products search 키워드` / `add <다나와 링크|pcode> [목표가] [--category 분류]` / `remove` / `list`
+- 상품 등록·해제 로직은 `app/tracking.py` 하나 (CLI·대시보드 공용)
 
 ## 구조
 app/collector 수집 · app/analysis 판정 · app/report 보고서·알림 · app/web 화면 · app/db 스키마·SQL · tests/fixtures HTML 샘플

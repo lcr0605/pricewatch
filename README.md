@@ -24,6 +24,7 @@ pip install -r requirements.txt
 cp .env.example .env   # DATABASE_URL 입력
 pytest -q
 python -m app.products search 샴푸
+python -m app.products add "https://prod.danawa.com/info/?pcode=97405013" 280000   # 링크로 추적 시작
 python -m app.run_daily
 ```
 

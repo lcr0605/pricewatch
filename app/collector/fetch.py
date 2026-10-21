@@ -1,7 +1,8 @@
 """다나와 페이지 요청. 수집 정책은 app/collector/CLAUDE.md 참고."""
 
+import re
 import time
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
@@ -54,3 +55,29 @@ def fetch_html(session: requests.Session, url: str, params: dict | None = None) 
 
 def fetch_product_html(session: requests.Session, pcode: str) -> str:
     return fetch_html(session, PRODUCT_URL.format(pcode=pcode))
+
+
+def extract_pcode(text: str) -> str:
+    """다나와 상품 링크나 상품코드에서 상품코드(숫자)를 꺼낸다.
+
+    PC: https://prod.danawa.com/info/?pcode=97405013&cate=...
+    모바일: https://m.danawa.com/product/product.html?code=97405013
+    숫자만: 97405013
+    """
+    text = (text or "").strip()
+    if re.fullmatch(r"\d{4,12}", text):
+        return text
+    if not text:
+        raise ValueError("다나와 상품 링크를 입력해 주세요")
+
+    url = urlparse(text if "://" in text else f"https://{text}")
+    host = (url.hostname or "").lower()
+    if not (host == "danawa.com" or host.endswith(".danawa.com")):
+        raise ValueError("다나와 상품 페이지 링크가 아닙니다")
+
+    query = parse_qs(url.query)
+    for key in ("pcode", "code"):
+        value = (query.get(key) or [""])[0]
+        if re.fullmatch(r"\d{4,12}", value):
+            return value
+    raise ValueError("링크에서 상품코드를 찾지 못했습니다. 다나와 상품 상세 페이지 링크인지 확인해 주세요")
