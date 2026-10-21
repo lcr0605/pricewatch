@@ -4,7 +4,8 @@
 ## 명령 (가상환경: `source .venv/bin/activate`, Python 3.11)
 - 설치: `pip install -r requirements.txt`
 - 테스트: `pytest -q` (커밋 전 필수 통과)
-- 하루치 수집: `python -m app.run_daily`
+- 하루치 실행(수집→분석→보고서·알림): `python -m app.run_daily` / 보고서만: `--report`
+- 텔레그램 대화방 ID 찾기: `python -m app.report.notify`
 - 상품 찾기·등록: `python -m app.products search 키워드` / `add pcode [목표가]` / `list`
 
 ## 구조
