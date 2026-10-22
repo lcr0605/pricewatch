@@ -5,6 +5,7 @@
 화면: 홈 · 추적 상품(링크로 추가) · 상품 상세(가격 추이) · 운영 기록
 """
 
+import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -28,9 +29,11 @@ PREVIEW_INTERVAL_SECONDS = 5  # 다나와 미리보기 요청 최소 간격 (수
 _last_preview_at = 0.0
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)  # API 문서 비공개
+# 배포 서버(https)에서는 COOKIE_SECURE=1 → 쿠키를 https 연결에서만 전송. 로컬(http) 개발은 기본값 0
+COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "0") == "1"
 app.add_middleware(
     SessionMiddleware, secret_key=auth.session_secret(), same_site="lax",
-    https_only=False, max_age=60 * 60 * 12,
+    https_only=COOKIE_SECURE, max_age=60 * 60 * 12,
 )
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
