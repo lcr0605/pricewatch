@@ -38,3 +38,5 @@
 - **배포:** Render CLI로 서비스 생성(싱가포르, main 자동 배포, `/healthz` 상태 확인). 환경변수는 `.env`에서 읽어 전달하고 출력하지 않음. CLI에 환경변수 수정 기능이 없어 이후 변경은 Render API 사용
 - **배포 후 점검:** 비로그인 접근 차단, `/docs`·`/openapi.json` 404, 틀린 비밀번호 거절, 로그인 후 실제 DB 데이터 표시 확인
   - **발견:** 로그인 쿠키에 `Secure` 표시가 없음(로컬 http 개발용 설정이 그대로 배포됨) → `COOKIE_SECURE` 환경변수로 배포 서버에서만 켜도록 수정
+- **자동 배포 미동작 발견:** PR 병합 후 Render가 새 커밋을 배포하지 않음. 저장소를 공개 주소로만 연결해 GitHub 변경 신호를 받지 못했음 → 우선 `render deploys create`로 수동 배포(약 3분)하고 쿠키 Secure 적용 확인
+- **대응:** Render 계정에 GitHub 연결(Git Deployment Credentials) + Render GitHub App에 `pricewatch` 저장소만 접근 허용. 이 문서 변경 PR의 병합으로 자동 배포 동작을 확인
