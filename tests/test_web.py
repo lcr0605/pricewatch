@@ -188,3 +188,16 @@ def test_목표가_수정과_추적_해제(client, fake):
     response = client.post("/products/97405013/stop", data={"csrf": csrf})
     assert "추적을 해제했어요" in response.text
     assert fake.products["97405013"]["is_active"] is False
+
+
+def test_COOKIE_SECURE가_켜지면_쿠키에_Secure가_붙는다(monkeypatch):
+    import importlib
+    monkeypatch.setenv("COOKIE_SECURE", "1")
+    secure_main = importlib.reload(main)
+    try:
+        client = TestClient(secure_main.app, base_url="https://testserver")
+        response = client.get("/login")
+        assert "secure" in response.headers["set-cookie"].lower()
+    finally:
+        monkeypatch.setenv("COOKIE_SECURE", "0")
+        importlib.reload(main)
