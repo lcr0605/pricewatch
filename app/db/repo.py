@@ -206,3 +206,24 @@ def run_stats(conn) -> dict:
                   coalesce(sum(total), 0) as attempted
            from runs where status <> 'running'"""
     ).fetchone()
+
+
+# ---- 중복 실행 방지 ----
+
+RUN_LOCK_KEY = 20261021  # 하루치 실행 전용 잠금 번호 (아무 고정 숫자)
+
+
+def try_run_lock(conn) -> bool:
+    """다른 하루치 실행이 진행 중이면 False. 잠금은 연결이 끊기면 자동으로 풀린다."""
+    return conn.execute("select pg_try_advisory_lock(%s) as ok", (RUN_LOCK_KEY,)).fetchone()["ok"]
+
+
+def succeeded_today(conn, today: date) -> dict | None:
+    """오늘(KST) 성공 또는 일부 성공한 실행이 있으면 그 기록. 실패(점검 필요)는 다시 실행 가능."""
+    return conn.execute(
+        """select id, started_at, succeeded, total from runs
+           where status in ('success', 'partial')
+             and (started_at at time zone 'Asia/Seoul')::date = %s
+           order by started_at desc limit 1""",
+        (today,),
+    ).fetchone()

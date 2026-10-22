@@ -1,7 +1,11 @@
 """하루치 실행: 수집 → 분석 → 일일 보고서·알림. GitHub Actions(daily.yml)가 매일 08:47(KST)에 실행한다.
 
-    python -m app.run_daily              # 수집부터 전부
+    python -m app.run_daily              # 수집부터 전부 (오늘 이미 성공했으면 건너뜀)
+    python -m app.run_daily --force      # 오늘 이미 수집했어도 다시 수집
     python -m app.run_daily --report     # 수집 없이 오늘 보고서만 다시 만들기
+
+중복 실행 방지: 다른 실행이 진행 중이거나(DB 잠금) 오늘 이미 성공했으면
+다나와 요청·알림 없이 바로 끝낸다. 실행 환경을 옮기거나 수동으로 다시 눌러도 안전하다.
 
 종료 코드: 0 = 정상, 1 = 실패율이 높아 점검 필요 (Actions에서 실패로 표시 + 텔레그램 알림)
 """
@@ -24,9 +28,17 @@ KST = ZoneInfo("Asia/Seoul")
 DELAY_SECONDS = (3, 5)  # 요청 사이 대기 (수집 정책)
 
 
-def run() -> int:
+def run(force: bool = False) -> int:
     today = datetime.now(KST).date()
     conn = repo.connect()
+    if not repo.try_run_lock(conn):
+        print("다른 실행이 진행 중이라 건너뜁니다.")
+        return 0
+    done = None if force else repo.succeeded_today(conn, today)
+    if done:
+        print(f"{today} 수집은 이미 끝났습니다 (실행 #{done['id']}, {done['succeeded']}/{done['total']}). "
+              "다시 수집하려면 --force")
+        return 0
     products = repo.active_products(conn)
     run_id = repo.start_run(conn)
     session = new_session()
@@ -94,4 +106,4 @@ if __name__ == "__main__":
     if "--report" in sys.argv:
         report_only()
         sys.exit(0)
-    sys.exit(run())
+    sys.exit(run(force="--force" in sys.argv))
