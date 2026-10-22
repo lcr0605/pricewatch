@@ -48,3 +48,5 @@
 - 점검 통과를 확인한 뒤 Render 서비스 삭제 (예전 주소 404 확인)
 - 매일 수집은 GitHub Actions 그대로 유지 (무료·실행 기록 공개, 중복 실행 방지 장치로 이전도 안전)
 - 남은 일: 2026-12-01 전 `railway.json` → `.railway/railway.ts` 이전
+- **자동 배포 미동작 발견 (Railway):** 링크 교체 PR(#9) 병합 후 3분이 지나도 새 배포가 없음. Railway API로 확인하니 서비스에 저장소는 연결돼 있지만 배포 트리거(deployment trigger)가 0개였음 (CLI `railway add --repo`로 만들 때 빠짐)
+- **대응:** Railway GraphQL API로 `main` 브랜치 트리거 생성, `checkSuites: true`로 GitHub 테스트 통과 후에만 배포되게 설정. 이 기록을 올리는 PR의 병합으로 자동 배포 동작 확인
