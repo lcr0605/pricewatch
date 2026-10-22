@@ -8,9 +8,9 @@ on:
   workflow_dispatch:            # Actions 탭에서 수동 실행
     inputs:
       mode:
-        description: "full = 수집부터 전부, report = 수집 없이 오늘 보고서만"
+        description: "full = 수집부터 전부(오늘 이미 했으면 건너뜀), force = 오늘 다시 수집, report = 보고서만"
         type: choice
-        options: [full, report]
+        options: [full, force, report]
         default: full
 
 # 최소 권한: 저장소 읽기만 (쓰기·PR·이슈 권한 없음)
@@ -50,6 +50,8 @@ jobs:
         run: |
           if [ "$MODE" = "report" ]; then
             python -m app.run_daily --report
+          elif [ "$MODE" = "force" ]; then
+            python -m app.run_daily --force
           else
             python -m app.run_daily
           fi
