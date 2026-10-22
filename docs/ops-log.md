@@ -40,3 +40,11 @@
   - **발견:** 로그인 쿠키에 `Secure` 표시가 없음(로컬 http 개발용 설정이 그대로 배포됨) → `COOKIE_SECURE` 환경변수로 배포 서버에서만 켜도록 수정
 - **자동 배포 미동작 발견:** PR 병합 후 Render가 새 커밋을 배포하지 않음. 저장소를 공개 주소로만 연결해 GitHub 변경 신호를 받지 못했음 → 우선 `render deploys create`로 수동 배포(약 3분)하고 쿠키 Secure 적용 확인
 - **대응:** Render 계정에 GitHub 연결(Git Deployment Credentials) + Render GitHub App에 `pricewatch` 저장소만 접근 허용. 이 문서 변경 PR의 병합으로 자동 배포 동작을 확인
+
+## 2026-10-23 · Railway 복구 확인 후 대시보드를 Railway로 이전, Render 서비스 삭제
+- Railway CLI 재로그인 후 프로젝트 `pricewatch`·서비스 `web` 생성 → 빌드·배포 성공 (장애 중에는 이 단계에서 막혔음)
+- 환경변수 4개(`DATABASE_URL`, `APP_PASSWORD`, `SESSION_SECRET`, `COOKIE_SECURE=1`)는 `.env`에서 읽어 전달, 출력에서도 값을 가림
+- 배포 후 점검 7개 통과: `/healthz`, 비로그인 차단, API 문서 비공개, 쿠키 Secure, 틀린 비밀번호 거절, 로그인 후 실제 데이터, 상품·상세·운영 기록 화면
+- 점검 통과를 확인한 뒤 Render 서비스 삭제 (예전 주소 404 확인)
+- 매일 수집은 GitHub Actions 그대로 유지 (무료·실행 기록 공개, 중복 실행 방지 장치로 이전도 안전)
+- 남은 일: 2026-12-01 전 `railway.json` → `.railway/railway.ts` 이전

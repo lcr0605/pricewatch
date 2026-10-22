@@ -16,9 +16,9 @@ app/collector 수집 · app/analysis 판정 · app/report 보고서·알림 · a
 
 ## 배포
 - 매일 수집: GitHub Actions `daily.yml` (UTC 23:47 = KST 08:47, 정각 혼잡 회피, 수동 실행 시 mode=report로 보고서만)
-- 대시보드: Render 무료 웹 서비스 `pricewatch` (싱가포르, main 자동 배포, https://pricewatch-ess2.onrender.com). 15분 미사용 시 잠들고 첫 접속 약 1분. `railway.json`은 Railway 복구 시 이전용으로 보관
+- 대시보드: Railway 프로젝트 `pricewatch` / 서비스 `web` (`railway.json`, main 자동 배포, https://web-production-b130ef.up.railway.app). `railway.json`(Config as Code)은 2026-12-01 지원 종료 → 그 전에 `.railway/railway.ts`로 이전
 - CI: GitHub Actions `ci.yml` (PR마다 테스트, 비밀값 없음)
-- 비밀값은 GitHub Secrets·Render 환경변수로만 (Render CLI는 환경변수 수정이 없어 Render API 사용, 값 출력 금지). 배포 서버는 `COOKIE_SECURE=1`. 워크플로는 `permissions: contents: read`, 외부 Action은 커밋 해시 고정, 입력값은 env로 전달
+- 비밀값은 GitHub Secrets·Railway 변수로만 (`railway variables`, 값 출력 금지). 배포 서버는 `COOKIE_SECURE=1`. 워크플로는 `permissions: contents: read`, 외부 Action은 커밋 해시 고정, 입력값은 env로 전달
 
 ## 절대 규칙
 - 유료 API 호출 추가 금지 (운영 비용 0원)
